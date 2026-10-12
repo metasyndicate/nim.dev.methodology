@@ -1,0 +1,99 @@
+{
+  "metadata": {
+    "title": "Ontology API Map and Index for Automation Pipelines",
+    "version": "1.0.0",
+    "description": "Structured directory mapping programmatic access points, query paradigms, and schema profiles for automated ontology discovery, staging, and aggregation workflows.",
+    "target_runtimes": [
+      "bash",
+      "python"
+    ]
+  },
+  "repositories": [
+    {
+      "id": "bioportal",
+      "name": "NCBO BioPortal",
+      "primary_domain": "Biomedical & Life Sciences",
+      "access_points": {
+        "rest_base": "https://data.bioontology.org",
+        "search_endpoint": "/search",
+        "schema_endpoint": "/ontologies/{ontology_id}"
+      },
+      "auth": {
+        "type": "API_Key",
+        "header": "Authorization",
+        "value_format": "apikey token={API_KEY}"
+      },
+      "formats": [
+        "JSON-LD",
+        "OWL",
+        "Turtle"
+      ],
+      "automation_notes": "Requires account for API key. Strict rate limits. Excellent for metadata extraction and concept mappings."
+    },
+    {
+      "id": "ols4",
+      "name": "EMBL-EBI OLS4",
+      "primary_domain": "Life Sciences & Cross-Domain Comprehensive",
+      "access_points": {
+        "rest_base": "https://www.ebi.ac.uk/ols4/api",
+        "search_endpoint": "/select",
+        "schema_endpoint": "/ontologies/{ontology_id}/classes"
+      },
+      "auth": {
+        "type": "None",
+        "notes": "Publicly accessible endpoint, no credential layer required for general reads."
+      },
+      "formats": [
+        "JSON",
+        "JSON-LD",
+        "OWL/XML"
+      ],
+      "automation_notes": "Native Solr-backed search endpoint allows fast fuzzy/lexical retrieval. Perfect for staging parent-child graphs without auth overhead."
+    },
+    {
+      "id": "lov",
+      "name": "Linked Open Vocabularies (LOV)",
+      "primary_domain": "Cross-Domain, Semantic Web & Core Web Meta",
+      "access_points": {
+        "rest_base": "https://lov.linkeddata.es/dataset/lov/api/v2",
+        "search_endpoint": "/vocabulary/search",
+        "sparql_endpoint": "https://lov.linkeddata.es/dataset/lov/sparql"
+      },
+      "auth": {
+        "type": "None"
+      },
+      "formats": [
+        "N-Triples",
+        "Turtle",
+        "RDF/XML"
+      ],
+      "automation_notes": "Ideal for discovering standard schemas like Dublin Core, FOAF, SKOS, and PROV-O via direct SPARQL ingress."
+    }
+  ],
+  "automation_frameworks": [
+    {
+      "id": "oba",
+      "name": "OBA (Ontology-Based APIs)",
+      "runtime": "Python / Java Wrapper",
+      "purpose": "Automated OpenAPI Spec Generation from OWL schemas",
+      "repository": "https://github.com/KnowledgeCaptureAndDiscovery/OBA",
+      "pipeline_stage": "Codification & Documentation"
+    },
+    {
+      "id": "robot",
+      "name": "ROBOT Tool",
+      "runtime": "Java CLI / Bash Wrapper",
+      "purpose": "Materializing reasoner inferences, merging disparate subschemas, and filtering axioms",
+      "repository": "https://github.com/ontodev/robot",
+      "pipeline_stage": "Staging & Assembly/Aggregation"
+    },
+    {
+      "id": "rdflib",
+      "name": "RDFlib",
+      "runtime": "Python 3 Library",
+      "purpose": "In-memory triplestore parser, graph slicing, and programmatic schema validation",
+      "repository": "https://github.com/RDFLib/rdflib",
+      "pipeline_stage": "Integration & Custom Pipeline Glue"
+    }
+  ]
+}
