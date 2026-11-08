@@ -8,7 +8,7 @@ description: Model-driven build procedure (model -> schema -> spec -> facade -> 
 Follow in order. Do not skip ahead; stop and report at each gate.
 
 1. **Scope and rigor.** Restate the request. Identify the highest-level interface involved. State the rigor level (`loose` / `standard` / `rigorous`; default `standard`).
-2. **Conceptual.** Name the entities, relations, flows. Look up benchmark terms (use the `ontology-lookup` skill). Record each mapping or "no benchmark; assumption: X".
+2. **Conceptual.** Start from `.nim/discovery/baseline.model.json` (run the `discovery` skill first if it is missing). Name the entities, relations, flows; reuse bundle entities and IRIs, and use `ontology-lookup` only for concepts the bundle lacks. Record each mapping or "no benchmark; assumption: X".
 3. **Schema.** Draft the schema/subschema (entities, relations, constraints). Show it. Gate: confirm before proceeding if rigor is `rigorous` or the schema is shared.
 4. **Spec.** Define the interface over the schema: parameters, commands, API paths, flows.
 5. **Facade.** Generate or hand-write the typed interfaces/classes from the schema; no divergent definitions.

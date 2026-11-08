@@ -49,5 +49,17 @@ jsonschema.validate(json.load(open(sys.argv[1])), json.load(open(sys.argv[2])))'
   fi
 fi
 
+# Discovery gate: data-shape files need phase 0 first (a bundle, or a recorded skip reason).
+case "$file" in
+  *.schema.json|*.sql|*.ddl|*.linkml.yaml|*.shacl.ttl|*/schema/*|*/schemas/*)
+    case "$file" in */.nim/discovery/*) ;; *)
+      root="$(git -C "$(dirname "$file")" rev-parse --show-toplevel 2>/dev/null || true)"
+      if [[ -n "$root" && ! -r "$root/.nim/discovery/BUNDLE.md" && ! -r "$root/.nim/discovery.skip" ]]; then
+        printf '[validate:discovery] %s\nNo discovery bundle in %s. Run the discovery skill (nim.discovery run ...) before shaping data,\nor record why it does not apply in .nim/discovery.skip.\n' "$file" "$root" >&2
+        fail=1
+      fi ;;
+    esac ;;
+esac
+
 [[ $fail -eq 0 ]] || exit 2
 exit 0

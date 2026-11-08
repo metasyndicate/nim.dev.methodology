@@ -27,5 +27,10 @@
 ## Definition of done (project additions)
 - <items beyond the constitution's>
 
+## Discovery (phase 0)
+- Bundle: `.nim/discovery/` (`nim.discovery show`), or reason in `.nim/discovery.skip`
+- Request / keywords / profile: <as run>
+- Accepted entities and deviations: <decisions, with IRIs>
+
 ## Benchmarks used
-<ontology/standard tags this project aligns to; pinned versions>
+<ontology/standard tags this project aligns to; pinned versions (from the bundle's selection)>

@@ -15,11 +15,19 @@ Applies to all work unless a project `AGENTS.md` narrows it. Imperative, short, 
 7. Design for generality, extensibility, portability. Python is the portable default.
 8. Decompose into layers; keep boundaries clean; group like with like.
 
+## Phase 0: discovery
+
+Every project, and every task that introduces or changes a data shape, starts with
+discovery: request -> keywords -> ontology/standards search -> selection -> merged baseline
+model, written to `<project>/.nim/discovery/` (`discovery` skill; `nim.discovery`).
+The bundle is the default authority for principle 3. Not applicable? Record why in
+`.nim/discovery.skip`. Hooks inject the bundle at session start and flag schema edits without one.
+
 ## Build order (bottom-up)
 
 Do not build a layer before the ones beneath it exist.
 
-`model -> schema -> spec -> facade -> mux -> modules -> methods -> parameters -> interface -> commands -> forms -> configuration`
+`discovery -> model -> schema -> spec -> facade -> mux -> modules -> methods -> parameters -> interface -> commands -> forms -> configuration`
 
 For any request: (1) identify the highest-level interface involved, (2) build every lower
 interface first, (3) map each programmatic unit to a schema, subschema, or data-layer construct.

@@ -4,7 +4,20 @@
       {
         "matcher": "Edit|Write|MultiEdit",
         "hooks": [
-          { "type": "command", "command": "$HOME/Developer/methodology/hooks/validate.sh" }
+          {
+            "type": "command",
+            "command": "/usr/local/nim/dev/hooks/validate.sh"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/local/nim/dev/hooks/session-discovery.sh"
+          }
         ]
       }
     ]
