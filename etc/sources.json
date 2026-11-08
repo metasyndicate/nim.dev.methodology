@@ -1,0 +1,46 @@
+{
+  "$comment": "Source registry and selection priors. Read-only at runtime; override per run with --profile / --pin / --exclude. Priors multiply candidate scores (1.0 = neutral). Ontology ids are OLS4 ids, plus 'schemaorg' and 'schemastore'.",
+  "sources": {
+    "ols": {
+      "title": "EMBL-EBI Ontology Lookup Service (OLS4)",
+      "search": "https://www.ebi.ac.uk/ols4/api/search",
+      "ontology": "https://www.ebi.ac.uk/ols4/api/ontologies/{id}",
+      "ancestors": "https://www.ebi.ac.uk/ols4/api/ontologies/{id}/terms/{iri2}/hierarchicalAncestors",
+      "rows": 15,
+      "ttl_days": 7,
+      "skip_ontologies": ["schemaorg_http", "schemaorg_https"]
+    },
+    "schemaorg": {
+      "title": "schema.org (current release, JSON-LD)",
+      "url": "https://schema.org/version/latest/schemaorg-current-https.jsonld",
+      "ttl_days": 30
+    },
+    "schemastore": {
+      "title": "SchemaStore JSON Schema catalog",
+      "url": "https://www.schemastore.org/api/json/catalog.json",
+      "ttl_days": 30,
+      "max": 5
+    }
+  },
+  "upper": {
+    "continuant": ["http://purl.obolibrary.org/obo/BFO_0000002"],
+    "occurrent": ["http://purl.obolibrary.org/obo/BFO_0000003"]
+  },
+  "profiles": {
+    "default": {
+      "description": "General data design: lightly favor widely adopted, cross-domain vocabularies.",
+      "priors": { "schemaorg": 1.3, "bfo": 1.2, "iao": 1.1, "swo": 1.1, "edam": 1.1 },
+      "penalize": { "mesh": 0.5, "ncit": 0.6, "snomed": 0.4, "efo": 0.7 }
+    },
+    "nim": {
+      "description": "NIM problem space: data infrastructure, systems, software and programmatic components, computational biology, evolution, organizational hierarchies (see methodology ontology/map.md).",
+      "priors": { "schemaorg": 1.3, "bfo": 1.3, "iao": 1.2, "swo": 1.4, "edam": 1.4, "cdao": 1.4, "obi": 1.1, "ro": 1.2, "omo": 1.1 },
+      "penalize": { "mesh": 0.5, "ncit": 0.6, "snomed": 0.4, "efo": 0.7, "ncbitaxon": 0.6 }
+    },
+    "bio": {
+      "description": "Computational and evolutionary biology.",
+      "priors": { "edam": 1.4, "cdao": 1.4, "obi": 1.3, "go": 1.2, "so": 1.2, "ro": 1.2, "bfo": 1.2, "iao": 1.1 },
+      "penalize": { "mesh": 0.7, "snomed": 0.4 }
+    }
+  }
+}

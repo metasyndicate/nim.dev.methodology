@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:nim:discovery:bundle:1",
+  "title": "nim.discovery referential bundle",
+  "description": "Source of truth for every file nim.discovery writes into <project>/.nim/discovery/. Each file validates against one $defs entry (named in manifest.files[].schema). Uses only the JSON Schema subset that lib/discovery/validate.py implements: type, enum, const, required, properties, additionalProperties, items, minItems, pattern, $ref (local). Benchmarks: SKOS mapping relations for crosswalks; PROV-O (prov:wasDerivedFrom, prov:generatedAtTime) for provenance; BFO continuant/occurrent for upper classification.",
+  "$defs": {
+    "iri": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:", "description": "Absolute IRI/URI or CURIE of a term." },
+    "keyword": { "type": "string", "pattern": "^[a-z0-9][a-z0-9 _-]*$", "description": "Normalized search keyword: lowercase, single-spaced." },
+    "kind": { "type": "string", "enum": ["class", "property", "individual", "schema"], "description": "Term kind. 'schema' = a JSON Schema document (SchemaStore), not an ontology term." },
+    "upper": { "type": ["string", "null"], "enum": ["continuant", "occurrent", null], "description": "BFO top-level category; null = not resolved (agent/human decides)." },
+
+    "request": {
+      "type": "object",
+      "description": "The stated idea or work request and the search plan derived from it. Editable: change keywords/pin/exclude, then re-run stages.",
+      "required": ["text", "keywords", "profile", "rigor", "created"],
+      "additionalProperties": false,
+      "properties": {
+        "text": { "type": "string", "description": "Verbatim request." },
+        "keywords": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/keyword" }, "description": "Search terms (explicit or extracted)." },
+        "extracted": { "type": "boolean", "description": "True if keywords were machine-extracted from text." },
+        "profile": { "type": "string", "description": "Prior profile from etc/sources.json." },
+        "rigor": { "type": "string", "enum": ["loose", "standard", "rigorous"], "description": "Constitution rigor dial." },
+        "pin": { "type": "array", "items": { "type": "string" }, "description": "Ontology ids always selected." },
+        "exclude": { "type": "array", "items": { "type": "string" }, "description": "Ontology ids never selected." },
+        "max_ontologies": { "type": "integer", "description": "Upper bound for selection." },
+        "created": { "type": "string", "description": "ISO-8601 UTC timestamp." }
+      }
+    },
+
+    "candidate": {
+      "type": "object",
+      "description": "One search hit (one line of candidates.jsonl).",
+      "required": ["source", "ontology", "iri", "label", "kind", "keyword", "match", "score"],
+      "additionalProperties": false,
+      "properties": {
+        "source": { "type": "string", "enum": ["ols", "schemaorg", "schemastore"], "description": "Adapter that produced the hit." },
+        "ontology": { "type": "string", "description": "Ontology/vocabulary id (OLS ontology id, 'schemaorg', 'schemastore')." },
+        "iri": { "$ref": "#/$defs/iri" },
+        "label": { "type": "string" },
+        "kind": { "$ref": "#/$defs/kind" },
+        "definition": { "type": ["string", "null"] },
+        "keyword": { "$ref": "#/$defs/keyword" },
+        "match": { "type": "string", "enum": ["exact", "label", "text"], "description": "exact = normalized label equals keyword; label = keyword words in label; text = matched elsewhere (synonym/definition)." },
+        "rank": { "type": "integer", "description": "Position in the source's own result list (0-based)." },
+        "score": { "type": "number", "description": "match weight x rank decay x ontology prior." }
+      }
+    },
+
+    "ontologyChoice": {
+      "type": "object",
+      "required": ["id", "selected", "score", "covers", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": ["string", "null"] },
+        "version": { "type": ["string", "null"] },
+        "prior": { "type": "number" },
+        "selected": { "type": "boolean" },
+        "pinned": { "type": "boolean" },
+        "score": { "type": "number", "description": "Marginal gain when chosen (greedy weighted set cover), or standalone coverage score if not chosen." },
+        "covers": { "type": "array", "items": { "$ref": "#/$defs/keyword" } },
+        "exact": { "type": "array", "items": { "$ref": "#/$defs/keyword" } },
+        "reason": { "type": "string" }
+      }
+    },
+
+    "selection": {
+      "type": "object",
+      "description": "Ontology selection: greedy weighted set cover over keywords.",
+      "required": ["method", "ontologies", "uncovered"],
+      "additionalProperties": false,
+      "properties": {
+        "method": { "type": "string" },
+        "ontologies": { "type": "array", "items": { "$ref": "#/$defs/ontologyChoice" } },
+        "schemas": { "type": "array", "items": { "$ref": "#/$defs/candidate" }, "description": "Matching JSON Schemas (SchemaStore) for reference/integration." },
+        "uncovered": { "type": "array", "items": { "$ref": "#/$defs/keyword" } }
+      }
+    },
+
+    "mapping": {
+      "type": "object",
+      "required": ["iri", "relation"],
+      "additionalProperties": false,
+      "properties": {
+        "iri": { "$ref": "#/$defs/iri" },
+        "ontology": { "type": ["string", "null"] },
+        "label": { "type": ["string", "null"] },
+        "relation": { "type": "string", "enum": ["skos:exactMatch", "skos:closeMatch", "skos:broadMatch", "skos:relatedMatch"] },
+        "basis": { "type": "string", "description": "Why: 'owl:equivalentClass in source', 'same normalized label', ..." }
+      }
+    },
+
+    "attribute": {
+      "type": "object",
+      "required": ["name", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "iri": { "$ref": "#/$defs/iri" },
+        "type": { "type": "string", "description": "JSON Schema primitive or format hint: string|number|integer|boolean|date|date-time|time|uri|object (object = range is a non-datatype class, see range)." },
+        "range": { "type": "array", "items": { "$ref": "#/$defs/iri" }, "description": "Declared ranges in the source (e.g. schema:rangeIncludes)." },
+        "definition": { "type": ["string", "null"] },
+        "relevant": { "type": "boolean", "description": "Name matches a request keyword." }
+      }
+    },
+
+    "entity": {
+      "type": "object",
+      "required": ["name", "iri", "ontology", "keyword"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "description": "PascalCase design name." },
+        "iri": { "$ref": "#/$defs/iri" },
+        "ontology": { "type": "string" },
+        "label": { "type": "string" },
+        "definition": { "type": ["string", "null"] },
+        "keyword": { "$ref": "#/$defs/keyword" },
+        "upper": { "$ref": "#/$defs/upper" },
+        "parents": { "type": "array", "items": { "type": "object", "required": ["iri"], "properties": { "iri": { "$ref": "#/$defs/iri" }, "label": { "type": ["string", "null"] } } } },
+        "mappings": { "type": "array", "items": { "$ref": "#/$defs/mapping" } },
+        "attributes": { "type": "array", "items": { "$ref": "#/$defs/attribute" } }
+      }
+    },
+
+    "relation": {
+      "type": "object",
+      "required": ["name", "from", "to"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "iri": { "$ref": "#/$defs/iri" },
+        "from": { "type": "string", "description": "Entity name." },
+        "to": { "type": "string", "description": "Entity name." },
+        "definition": { "type": ["string", "null"] },
+        "cardinality": { "type": ["string", "null"], "description": "Left null by discovery; set during data design (1:1, 1:n, n:m)." }
+      }
+    },
+
+    "decision": {
+      "type": "object",
+      "required": ["subject", "decision", "authority", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "subject": { "type": "string" },
+        "decision": { "type": "string" },
+        "authority": { "type": "string", "description": "IRI/ontology tag, or 'no benchmark; assumption'." },
+        "status": { "type": "string", "enum": ["proposed", "accepted", "rejected"] }
+      }
+    },
+
+    "baseline": {
+      "type": "object",
+      "description": "Merged, ontology-grounded baseline model. Input to data design (JSON <-> DDL); not the final schema.",
+      "required": ["id", "title", "generated", "keywords", "ontologies", "entities", "relations", "vocabulary", "unresolved", "decisions"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "generated": { "type": "string" },
+        "rigor": { "type": "string" },
+        "keywords": { "type": "array", "items": { "$ref": "#/$defs/keyword" } },
+        "ontologies": { "type": "array", "items": { "type": "string" } },
+        "entities": { "type": "array", "items": { "$ref": "#/$defs/entity" } },
+        "relations": { "type": "array", "items": { "$ref": "#/$defs/relation" } },
+        "vocabulary": { "type": "array", "items": { "$ref": "#/$defs/candidate" }, "description": "Best non-entity terms (properties, individuals) per keyword." },
+        "unresolved": { "type": "array", "items": { "$ref": "#/$defs/keyword" } },
+        "decisions": { "type": "array", "items": { "$ref": "#/$defs/decision" } }
+      }
+    },
+
+    "manifest": {
+      "type": "object",
+      "description": "Provenance and integrity of the bundle (PROV-O aligned).",
+      "required": ["bundle", "tool", "generatedAtTime", "files", "sources"],
+      "additionalProperties": false,
+      "properties": {
+        "bundle": { "type": "string", "const": "nim.discovery" },
+        "schema": { "type": "string" },
+        "tool": { "type": "string" },
+        "generatedAtTime": { "type": "string" },
+        "offline": { "type": "boolean" },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "sha256"],
+            "additionalProperties": false,
+            "properties": { "path": { "type": "string" }, "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }, "schema": { "type": ["string", "null"] } }
+          }
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["url", "retrieved"],
+            "additionalProperties": false,
+            "properties": { "url": { "type": "string" }, "retrieved": { "type": "string" }, "sha256": { "type": "string" }, "cached": { "type": "boolean" } }
+          }
+        }
+      }
+    }
+  }
+}
