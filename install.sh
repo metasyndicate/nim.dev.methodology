@@ -24,4 +24,6 @@ echo
 echo "Manual steps:"
 echo "  1. Add to $dst/CLAUDE.md:   @$src/constitution.md"
 echo "  2. Merge $src/settings.fragment.json into $dst/settings.json"
+echo "  3. Link the discovery engine: ln -sfn $src/discovery /usr/local/nim/discovery"
+echo "     and put /usr/local/nim/discovery/bin/nim.discovery on PATH"
 (( apply )) || echo "(dry run; re-run with --apply)"

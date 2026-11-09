@@ -9,7 +9,7 @@ those belong in each project's own `AGENTS.md` (see `templates/AGENTS.project.md
 | Layer | File(s) | Applied |
 |---|---|---|
 | Hooks | `hooks/`, `settings.fragment.json` | Deterministically, by the harness |
-| Discovery | `nim.discovery` (separate repo) + `skills/discovery` | Phase 0 of every project; bundle injected each session |
+| Discovery | `discovery/` (engine) + `skills/discovery` | Phase 0 of every project; bundle injected each session |
 | Constitution | `constitution.md` | Always (imported from `~/.claude/CLAUDE.md`) |
 | Rules | `rules/*.md` (`paths:` globs) | Implicitly, when matching files are touched |
 | Skills | `skills/*/SKILL.md` | On demand, as procedures |
@@ -39,6 +39,7 @@ ontology/map.md          working ontology map (lookup per task)
 ontology/layers.md       layer + tier + language-allocation tables
 rules/                   python.md  shell.md  schema.md
 skills/model-first/      model -> schema -> spec -> facade procedure
+discovery/               phase-0 engine: nim.discovery command + metashell subsystem (own README)
 skills/discovery/        phase 0: request -> ontology bundle (.nim/discovery/) via nim.discovery
 skills/ontology-lookup/  pick a benchmark ontology for a concept
 agents/                  architect.md  reviewer.md

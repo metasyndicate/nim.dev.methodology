@@ -15,7 +15,8 @@ request ─▶ keywords ─▶ search ─▶ select ─▶ merge ─▶ <project
                                                                        manifest.json
 ```
 
-Standalone subsystem: python3 stdlib engine (`lib/discovery`), a metashell module
+Self-contained subsystem inside the methodology package (merged from the
+former `nim.discovery` repo): python3 stdlib engine (`lib/discovery`), a metashell module
 (`discovery.sh`, registered via `nim.mod.register`), and a command (`bin/nim.discovery`).
 No third-party dependencies; `jsonschema` is used for validation only if installed.
 
@@ -81,6 +82,6 @@ tests/                      offline unit tests: python3 -m unittest discover -s 
 ## Install
 
 ```bash
-ln -s ~/Developer/NIM/nim.discovery /usr/local/nim/discovery
+ln -s ~/Developer/NIM/methodology/discovery /usr/local/nim/discovery
 ln -s /usr/local/nim/discovery/bin/nim.discovery ~/.local/bin/nim.discovery   # or anywhere on PATH
 ```
