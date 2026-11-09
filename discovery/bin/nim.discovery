@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# nim.discovery — command entry point.
+#
+#   nim.discovery run "<request>" [-k a,b] [-p profile] [-r rigor] [--pin X] [--exclude Y]
+#   nim.discovery search|select|merge     re-run from a stage
+#   nim.discovery show|check|keywords|profiles|status
+#
+# Boots the metashell (nim.out/nim.log) when it is reachable and registers this
+# subsystem through nim.mod.register; otherwise runs the python engine directly.
+# Global flags (-o DIR, --offline, --refresh) go BEFORE the command.
+set -uo pipefail
+
+_real="$(readlink -f "${BASH_SOURCE[0]}")"
+NIM_DISCOVERY_HOME="$(cd "$(dirname "${_real}")/.." && pwd)"
+export NIM_DISCOVERY_HOME
+
+_init="${NIM_METASHELL:-/usr/local/nim/sh}/etc/nim.init.sh"
+_ms=0
+set +u  # the metashell reads optional env vars unguarded
+if [[ -r ${_init} ]] && source "${_init}" >/dev/null 2>&1 \
+    && declare -F nim.mod.register >/dev/null \
+    && nim.mod.register "${NIM_DISCOVERY_HOME}" >/dev/null 2>&1; then
+    _ms=1
+fi
+set -u
+
+_py() { PYTHONPATH="${NIM_DISCOVERY_HOME}/lib${PYTHONPATH:+:${PYTHONPATH}}" python3 -m discovery "$@"; }
+
+# 'status' is shell-side (cheap check, used by hooks); everything else is the engine.
+if [[ ${1:-} == status ]]; then
+    if (( _ms )); then nim.discovery.status; exit $?; fi
+    [[ -r ${NIM_DISCOVERY_OUT:-.nim/discovery}/BUNDLE.md ]] && { echo "bundle present"; exit 0; }
+    echo "no bundle"; exit 1
+fi
+_py "$@"
